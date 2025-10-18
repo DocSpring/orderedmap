@@ -1,0 +1,88 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+  test:verbose:
+    desc: Run tests with verbose output
+    cmds:
+      - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+  test:coverage:
+    desc: Run tests with coverage report
+    deps: [test]
+    cmds:
+      - go tool cover -html=coverage.txt -o coverage.html
+      - open coverage.html || xdg-open coverage.html || true
+
+  coverage:
+    desc: Check test coverage percentage (requires 100%)
+    deps: [test]
+    cmds:
+      - |
+        coverage=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: $coverage%"
+        if (( $(echo "$coverage < 100" | bc -l) )); then
+          echo "Error: Coverage is below 100%"
+          exit 1
+        fi
+
+  lint:config:
+    desc: Verify golangci-lint configuration
+    cmds:
+      - golangci-lint config verify
+
+  lint:
+    desc: Run linters
+    deps: [lint:config]
+    cmds:
+      - golangci-lint run ./...
+
+  lint:fix:
+    desc: Run linters with auto-fix
+    deps: [lint:config]
+    cmds:
+      - golangci-lint run --fix ./...
+
+  fmt:
+    desc: Format code
+    cmds:
+      - gofumpt -l -w .
+      - goimports -local github.com/DocSpring/orderedmap -w .
+
+  ci:
+    desc: Run all CI checks
+    cmds:
+      - task: lint
+      - task: test
+      - task: coverage
+
+  mod:tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+
+  mod:download:
+    desc: Download go modules
+    cmds:
+      - go mod download
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -f coverage.txt coverage.html
+
+  install:tools:
+    desc: Install development tools
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install mvdan.cc/gofumpt@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
