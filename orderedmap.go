@@ -1,6 +1,6 @@
 // Package orderedmap provides a thread-safe, generic ordered map that maintains insertion order
 // while providing O(1) lookups. Unlike Go's built-in map, OrderedMap iterates in the order items
-// were added, preventing UI flickering and enabling predictable, deterministic behavior.
+// were added, enabling predictable, deterministic behavior.
 package orderedmap
 
 import "sync"
@@ -14,7 +14,6 @@ type node[K comparable, V any] struct {
 }
 
 // OrderedMap maintains insertion order while providing O(1) lookups, deletes, and moves
-// This prevents UI flickering from Go's random map iteration order
 //
 // Thread-safe: All operations use internal locking
 // Zero value is usable: var om OrderedMap[K,V] works without initialization
